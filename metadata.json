@@ -1,0 +1,6 @@
+{
+  "name": "IntervAI - AI Mock Interview Platform",
+  "description": "A comprehensive AI-powered mock interview platform featuring resume parsing, aptitude tests, coding rounds with real-time evaluation, and HR interviews with face detection and speech-to-text.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": []
+}
