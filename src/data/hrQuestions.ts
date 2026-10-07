@@ -1,4 +1,5 @@
 import { HRQuestion } from '../types';
+import { RESUME_HR_QUESTIONS } from './resumeProfile';
 
 export const LOCAL_HR_QUESTIONS: HRQuestion[] = [
   {
@@ -51,7 +52,20 @@ export const LOCAL_HR_QUESTIONS: HRQuestion[] = [
   }
 ];
 
-export function getLocalHRQuestions(count: number = 4): HRQuestion[] {
-  const shuffled = [...LOCAL_HR_QUESTIONS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+/**
+ * Returns a mixed set of HR questions:
+ * - Resume-specific questions (based on Gobika Baskaran's actual resume) shuffled first
+ * - Generic behavioral questions as filler
+ * Total returned = count
+ */
+export function getLocalHRQuestions(count: number = 8): HRQuestion[] {
+  const shuffledResume = [...RESUME_HR_QUESTIONS].sort(() => Math.random() - 0.5);
+  const shuffledGeneric = [...LOCAL_HR_QUESTIONS].sort(() => Math.random() - 0.5);
+
+  // Prioritize resume-specific questions, pad with generic ones if needed
+  const combined = [...shuffledResume, ...shuffledGeneric];
+  return combined.slice(0, count);
 }
+
+// Re-export so HRRound can import directly from this file
+export { RESUME_HR_QUESTIONS };

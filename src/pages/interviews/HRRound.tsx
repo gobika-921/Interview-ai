@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { geminiService } from '../../services/gemini';
+// geminiService removed — HR questions now use the shared resume profile locally
 import { createInterview } from '../../lib/firestoreUtils';
 import { getLocalHRQuestions } from '../../data/hrQuestions';
 import { evaluateHRAnswer, generateFeedbackData } from '../../lib/evaluator';
@@ -115,37 +115,13 @@ export default function HRRound() {
 
   const startInterview = async () => {
     setLoading(true);
-    let loadedQs: HRQuestion[] = [];
-    let isLocal = true;
 
-    try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey || apiKey.trim() === '' || apiKey === 'MY_GEMINI_API_KEY') {
-        throw new Error('Using local question bank.');
-      }
-      const remoteQs = await geminiService.generateHRQuestions(
-        userProfile?.domain || 'General',
-        userProfile?.skills || []
-      );
-      if (Array.isArray(remoteQs) && remoteQs.length > 0) {
-        loadedQs = remoteQs.map((q: string, i: number) => ({
-          id: 'hr-ai-' + i,
-          question: q,
-          category: 'Behavioral & Role Fit',
-          intent: 'Assess behavioral alignment and communication.',
-          idealElements: ['STAR method', 'action orientation', 'results']
-        }));
-        isLocal = false;
-      } else {
-        throw new Error('Empty AI response');
-      }
-    } catch {
-      loadedQs = getLocalHRQuestions(4);
-      isLocal = true;
-    }
+    // Always use resume-specific questions from the shared profile.
+    // These are based on Gobika Baskaran's actual resume content.
+    const loadedQs = getLocalHRQuestions(8);
 
     setQuestions(loadedQs);
-    setUsedLocalQuestions(isLocal);
+    setUsedLocalQuestions(true);
     setCurrentQuestionIndex(0);
     setResponses([]);
     setTypedAnswer('');

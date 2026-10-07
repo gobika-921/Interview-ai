@@ -1,14 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { geminiService } from '../services/gemini';
+// Resume analysis handled by the dedicated Resume Analyzer page
 import { DOMAINS, EXPERIENCE_LEVELS, DIFFICULTIES } from '../constants';
 import { FileText, Upload, CheckCircle2, ChevronRight, Brain, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import * as pdfjs from 'pdfjs-dist';
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 export default function ProfileSetup() {
   const { currentUser, userProfile, updateUserProfile } = useAuth();
@@ -27,46 +23,15 @@ export default function ProfileSetup() {
     resumeData: userProfile?.resumeData || null,
   });
 
-  const extractTextFromPDF = async (file: File) => {
-    const reader = new FileReader();
-    return new Promise<string>((resolve, reject) => {
-      reader.onload = async () => {
-        try {
-          const typedarray = new Uint8Array(reader.result as ArrayBuffer);
-          const pdf = await pdfjs.getDocument(typedarray).promise;
-          let text = "";
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            text += content.items.map((item: any) => item.str).join(" ");
-          }
-          resolve(text);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Resume upload in profile setup is optional — marks the field as uploaded.
+  // Full analysis is available in the dedicated Resume Analyzer page.
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    setLoading(true);
-    try {
-      const text = await extractTextFromPDF(file);
-      const analysis = await geminiService.analyzeResume(text);
-      setFormData(prev => ({
-        ...prev,
-        skills: [...new Set([...prev.skills, ...(analysis.skills || [])])],
-        resumeData: analysis
-      }));
-    } catch (error) {
-      console.error("Resume Parsing Error:", error);
-    } finally {
-      setLoading(false);
-    }
+    if (!file || !file.name.toLowerCase().endsWith('.pdf')) return;
+    setFormData(prev => ({
+      ...prev,
+      resumeData: { uploaded: true, filename: file.name }
+    }));
   };
 
   const handleSubmit = async () => {
